@@ -1,5 +1,5 @@
 <?php
-////use Blesta\Core\Util\Validate\Server;
+use Blesta\Core\Util\Validate\Server;
 /**
  * Enhance Module
  *
@@ -1141,7 +1141,8 @@ class Enhance extends Module
      */
     public function validateDomain($domain)
     {
-        return filter_var($domain, FILTER_VALIDATE_DOMAIN) !== false;
+        $validator = new Server();
+        return $validator->isDomain($domain) || $validator->isIp($domain);
     }
 
     /**
