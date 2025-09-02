@@ -240,13 +240,6 @@ class Enhance extends Module
             return $meta;
         }
     }
-    /**
-     * Returns the moduleRowMeta data to be used for display purposes (e.g. hostname).
-     * Must be a module row key.
-     */
-    public function moduleRowMetaKey() {
-        return "hostname";
-    }
 
     /**
      * Builds and returns the rules required to add/edit a module row (e.g. server).

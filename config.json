@@ -12,10 +12,7 @@
         "row": "Enhance.module_row",
         "rows": "Enhance.module_row_plural",
         "group": "Enhance.module_group",
-        "row_key": "server_label",
-        "row_key": "hostname",
-        "row_key": "org_id",
-        "row_key": "api_token"
+        "row_key": "server_label"
     },
     "package": {
         "name_key": "package"
