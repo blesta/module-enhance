@@ -1329,7 +1329,7 @@ class Enhance extends Module
 
             $this->log($row->meta->hostname . '|sso_debug', 'Starting SSO generation for customer_org_id: ' . $service_fields->customer_org_id, 'input', true);
 
-            // Use WHMCS SSO pattern: Get customer org members and find owner
+            // Get customer org members and find owner
             try {
                 $membersResponse = $api->getCustomerOrgMembers($service_fields->customer_org_id);
                 if (!$membersResponse->errors()) {
@@ -1363,7 +1363,7 @@ class Enhance extends Module
                 $otp_result = $otp_response->response();
                 $this->log($row->meta->hostname . '|sso_debug', 'SSO response: ' . json_encode($otp_result), 'output', true);
 
-                // WHMCS pattern: response should be a string URL
+                // Response should be a string URL
                 if (is_string($otp_result)) {
                     $login_url = trim($otp_result, '"');
                     $this->log($row->meta->hostname . '|sso_success', 'Generated SSO URL: ' . $login_url, 'output', true);
@@ -1422,7 +1422,7 @@ class Enhance extends Module
 
             $this->log($row->meta->hostname . '|sso_debug', 'Starting SSO generation for customer_org_id: ' . $service_fields->customer_org_id, 'input', true);
 
-            // Use WHMCS SSO pattern: Get customer org members and find owner
+            // Get customer org members and find owner
             try {
                 $membersResponse = $api->getCustomerOrgMembers($service_fields->customer_org_id);
                 if (!$membersResponse->errors()) {
@@ -1456,7 +1456,7 @@ class Enhance extends Module
                 $otp_result = $otp_response->response();
                 $this->log($row->meta->hostname . '|sso_debug', 'SSO response: ' . json_encode($otp_result), 'output', true);
 
-                // WHMCS pattern: response should be a string URL
+                // Response should be a string URL
                 if (is_string($otp_result)) {
                     $login_url = trim($otp_result, '"');
                     $this->log($row->meta->hostname . '|sso_success', 'Generated SSO URL: ' . $login_url, 'output', true);

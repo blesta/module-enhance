@@ -440,7 +440,7 @@ class EnhanceApi
     }
 
     /**
-     * Generate SSO link for organization member (WHMCS pattern)
+     * Generate SSO link for organization member
      * Returns a short-lived OTP link for direct login
      *
      * @param string $org_id The organization ID
