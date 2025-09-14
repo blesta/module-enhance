@@ -16,7 +16,17 @@
                     <td><?php echo (isset($service_fields->customer_email) ? $this->Html->safe($service_fields->customer_email) : null); ?></td>
                     <td><?php echo (isset($service_fields->password) ? $this->Html->safe($service_fields->password) : null); ?></td>
                     <td>
+                        <?php
+                        if ((isset($login_url) ? $login_url : null)) {
+                        ?>
+                        <a href="<?php echo (isset($login_url) ? $this->Html->safe($login_url) : null);?>" target="_blank"><?php $this->_('Enhance.service_info.option_login');?></a>
+                        <?php
+                        } else {
+                        ?>
                         <a href="https://<?php echo (isset($module_row->meta->hostname) ? $this->Html->safe($module_row->meta->hostname) : ''); ?>:2087" target="_blank"><?php $this->_('Enhance.service_info.option_login');?></a>
+                        <?php
+                        }
+                        ?>
                     </td>
                 </tr>
             </tbody>

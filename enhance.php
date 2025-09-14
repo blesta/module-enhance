@@ -1322,18 +1322,66 @@ class Enhance extends Module
 
         $service_fields = $this->serviceFieldsToObject($service->fields);
         $login_url = null;
-        
-        // Generate login URL if we have the necessary information
-        if (isset($service_fields->website_id) && $row) {
+
+        // Generate SSO login URL if we have the necessary information
+        if (isset($service_fields->customer_org_id) && $row) {
             $api = $this->getApi($row->meta->server_label, $row->meta->hostname, $row->meta->org_id, $row->meta->api_token);
-            $response = $api->createLoginSession($service_fields->website_id);
-            
-            if (!($response->errors())) {
-                $result = $response->response();
-                if (isset($result->login_url)) {
-                    $login_url = $result->login_url;
+
+            $this->log($row->meta->hostname . '|sso_debug', 'Starting SSO generation for customer_org_id: ' . $service_fields->customer_org_id, 'input', true);
+
+            // Use WHMCS SSO pattern: Get customer org members and find owner
+            try {
+                $membersResponse = $api->getCustomerOrgMembers($service_fields->customer_org_id);
+                if (!$membersResponse->errors()) {
+                    $members = $membersResponse->response();
+                    $owner = null;
+                    if (isset($members->items) && is_array($members->items)) {
+                        foreach ($members->items as $member) {
+                            $roles = $member->roles ?? [];
+                            if (in_array('Owner', $roles, true)) {
+                                $owner = $member;
+                                break;
+                            }
+                        }
+                    }
+                    if ($owner && isset($owner->id)) {
+                        $otp_response = $api->generateSsoLink($service_fields->customer_org_id, $owner->id);
+                    } else {
+                        $this->log($row->meta->hostname . '|sso_error', 'No owner member found', 'output', false);
+                        $otp_response = null;
+                    }
+                } else {
+                    $this->log($row->meta->hostname . '|sso_error', 'Failed to get members: ' . serialize($membersResponse->errors()), 'output', false);
+                    $otp_response = null;
                 }
+            } catch (Exception $e) {
+                $this->log($row->meta->hostname . '|sso_error', 'SSO exception: ' . $e->getMessage(), 'output', false);
+                $otp_response = null;
             }
+
+            if ($otp_response && !$otp_response->errors()) {
+                $otp_result = $otp_response->response();
+                $this->log($row->meta->hostname . '|sso_debug', 'SSO response: ' . json_encode($otp_result), 'output', true);
+
+                // WHMCS pattern: response should be a string URL
+                if (is_string($otp_result)) {
+                    $login_url = trim($otp_result, '"');
+                    $this->log($row->meta->hostname . '|sso_success', 'Generated SSO URL: ' . $login_url, 'output', true);
+                } elseif (isset($otp_result->url)) {
+                    $login_url = $otp_result->url;
+                    $this->log($row->meta->hostname . '|sso_success', 'Generated SSO URL from object: ' . $login_url, 'output', true);
+                } else {
+                    $this->log($row->meta->hostname . '|sso_error', 'SSO response received but no URL found: ' . json_encode($otp_result), 'output', false);
+                }
+            } elseif ($otp_response) {
+                $this->log($row->meta->hostname . '|sso_error', 'SSO failed: ' . serialize($otp_response->errors()) . ' Status: ' . $otp_response->status(), 'output', false);
+            }
+
+        } else {
+            $missing = [];
+            if (!isset($service_fields->customer_org_id)) $missing[] = 'customer_org_id';
+            if (!$row) $missing[] = 'module_row';
+            $this->log($row ? $row->meta->hostname : 'unknown' . '|sso_error', 'Missing required fields for SSO: ' . implode(', ', $missing), 'output', false);
         }
 
         $this->view->set('module_row', $row);
@@ -1367,18 +1415,66 @@ class Enhance extends Module
 
         $service_fields = $this->serviceFieldsToObject($service->fields);
         $login_url = null;
-        
-        // Generate login URL if we have the necessary information
-        if (isset($service_fields->website_id) && $row) {
+
+        // Generate SSO login URL if we have the necessary information
+        if (isset($service_fields->customer_org_id) && $row) {
             $api = $this->getApi($row->meta->server_label, $row->meta->hostname, $row->meta->org_id, $row->meta->api_token);
-            $response = $api->createLoginSession($service_fields->website_id);
-            
-            if (!($response->errors())) {
-                $result = $response->response();
-                if (isset($result->login_url)) {
-                    $login_url = $result->login_url;
+
+            $this->log($row->meta->hostname . '|sso_debug', 'Starting SSO generation for customer_org_id: ' . $service_fields->customer_org_id, 'input', true);
+
+            // Use WHMCS SSO pattern: Get customer org members and find owner
+            try {
+                $membersResponse = $api->getCustomerOrgMembers($service_fields->customer_org_id);
+                if (!$membersResponse->errors()) {
+                    $members = $membersResponse->response();
+                    $owner = null;
+                    if (isset($members->items) && is_array($members->items)) {
+                        foreach ($members->items as $member) {
+                            $roles = $member->roles ?? [];
+                            if (in_array('Owner', $roles, true)) {
+                                $owner = $member;
+                                break;
+                            }
+                        }
+                    }
+                    if ($owner && isset($owner->id)) {
+                        $otp_response = $api->generateSsoLink($service_fields->customer_org_id, $owner->id);
+                    } else {
+                        $this->log($row->meta->hostname . '|sso_error', 'No owner member found', 'output', false);
+                        $otp_response = null;
+                    }
+                } else {
+                    $this->log($row->meta->hostname . '|sso_error', 'Failed to get members: ' . serialize($membersResponse->errors()), 'output', false);
+                    $otp_response = null;
                 }
+            } catch (Exception $e) {
+                $this->log($row->meta->hostname . '|sso_error', 'SSO exception: ' . $e->getMessage(), 'output', false);
+                $otp_response = null;
             }
+
+            if ($otp_response && !$otp_response->errors()) {
+                $otp_result = $otp_response->response();
+                $this->log($row->meta->hostname . '|sso_debug', 'SSO response: ' . json_encode($otp_result), 'output', true);
+
+                // WHMCS pattern: response should be a string URL
+                if (is_string($otp_result)) {
+                    $login_url = trim($otp_result, '"');
+                    $this->log($row->meta->hostname . '|sso_success', 'Generated SSO URL: ' . $login_url, 'output', true);
+                } elseif (isset($otp_result->url)) {
+                    $login_url = $otp_result->url;
+                    $this->log($row->meta->hostname . '|sso_success', 'Generated SSO URL from object: ' . $login_url, 'output', true);
+                } else {
+                    $this->log($row->meta->hostname . '|sso_error', 'SSO response received but no URL found: ' . json_encode($otp_result), 'output', false);
+                }
+            } elseif ($otp_response) {
+                $this->log($row->meta->hostname . '|sso_error', 'SSO failed: ' . serialize($otp_response->errors()) . ' Status: ' . $otp_response->status(), 'output', false);
+            }
+
+        } else {
+            $missing = [];
+            if (!isset($service_fields->customer_org_id)) $missing[] = 'customer_org_id';
+            if (!$row) $missing[] = 'module_row';
+            $this->log($row ? $row->meta->hostname : 'unknown' . '|sso_error', 'Missing required fields for SSO: ' . implode(', ', $missing), 'output', false);
         }
 
         $this->view->set('module_row', $row);

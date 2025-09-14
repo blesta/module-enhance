@@ -425,16 +425,31 @@ class EnhanceApi
         return $this->apiRequest("orgs/{$customer_org_id}/websites/{$website_id}/ssh/password", $data, 'POST');
     }
 
+
+
+
     /**
-     * Create a login session for the website
+     * Get all members of a customer organization
      *
-     * @param string $website_id The website ID
+     * @param string $customer_org_id The customer organization ID
      * @return EnhanceResponse
      */
-    public function createLoginSession($website_id)
+    public function getCustomerOrgMembers($customer_org_id)
     {
-        $data = ['websiteId' => $website_id];
-        return $this->apiRequest('login/sessions', $data, 'POST');
+        return $this->apiRequest("orgs/{$customer_org_id}/members", [], 'GET');
+    }
+
+    /**
+     * Generate SSO link for organization member (WHMCS pattern)
+     * Returns a short-lived OTP link for direct login
+     *
+     * @param string $org_id The organization ID
+     * @param string $member_id The member ID
+     * @return EnhanceResponse
+     */
+    public function generateSsoLink($org_id, $member_id)
+    {
+        return $this->apiRequest("orgs/{$org_id}/members/{$member_id}/sso", [], 'GET');
     }
 
     /**
