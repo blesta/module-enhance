@@ -98,17 +98,6 @@ class Enhance extends Module
         // Load the helpers required for this view
         Loader::loadHelpers($this, ['Form', 'Html', 'Widget']);
 
-        if (!empty($vars)) {
-            // Set unset checkboxes
-            $checkbox_fields = [];
-
-            foreach ($checkbox_fields as $checkbox_field) {
-                if (!isset($vars[$checkbox_field])) {
-                    $vars[$checkbox_field] = 'false';
-                }
-            }
-        }
-
         $this->view->set('vars', (object) $vars);
 
         return $this->view->fetch();
@@ -134,15 +123,6 @@ class Enhance extends Module
 
         if (empty($vars)) {
             $vars = $module_row->meta;
-        } else {
-            // Set unset checkboxes
-            $checkbox_fields = [];
-
-            foreach ($checkbox_fields as $checkbox_field) {
-                if (!isset($vars[$checkbox_field])) {
-                    $vars[$checkbox_field] = 'false';
-                }
-            }
         }
 
         $this->view->set('vars', (object) $vars);
@@ -163,7 +143,7 @@ class Enhance extends Module
      */
     public function addModuleRow(array &$vars)
     {
-        $meta_fields = ['server_label','hostname','org_id','api_token'];
+        $meta_fields = ['server_label', 'hostname', 'org_id', 'api_token'];
         $encrypted_fields = [];
 
         // Set unset checkboxes
@@ -211,15 +191,6 @@ class Enhance extends Module
     {
         $meta_fields = ['server_label','hostname','org_id','api_token'];
         $encrypted_fields = [];
-
-        // Set unset checkboxes
-        $checkbox_fields = [];
-
-        foreach ($checkbox_fields as $checkbox_field) {
-            if (!isset($vars[$checkbox_field])) {
-                $vars[$checkbox_field] = 'false';
-            }
-        }
 
         $this->Input->setRules($this->getRowRules($vars));
 
@@ -294,25 +265,8 @@ class Enhance extends Module
      */
     public function validateHostName($host_name)
     {
-        // Remove port if present for validation
-        $hostname_only = explode(':', $host_name)[0];
-        
-        // Check if it's a valid IP address
-        if (filter_var($hostname_only, FILTER_VALIDATE_IP) !== false) {
-            return true;
-        }
-        
-        // Check if it's a valid domain name
-        if (filter_var($hostname_only, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME) !== false) {
-            return true;
-        }
-        
-        // Allow localhost and basic hostnames
-        if (preg_match('/^[a-zA-Z0-9][a-zA-Z0-9\.-]*[a-zA-Z0-9]$/', $hostname_only)) {
-            return true;
-        }
-        
-        return false;
+        $validator = new Server();
+        return $validator->isDomain($host_name) || $validator->isIp($host_name);
     }
 
     /**
@@ -336,16 +290,16 @@ class Enhance extends Module
         if ($hostname && $org_id && $api_token) {
             try {
                 $api = $this->getApi('test', $hostname, $org_id, $api_token);
-                
+
                 // Log the API connection attempt
                 $this->log($hostname . '|validateConnection', serialize(['hostname' => $hostname, 'org_id' => $org_id]), 'input', true);
-                
+
                 $response = $api->testConnection();
                 $success = !($response->errors());
-                
+
                 // Log the response
                 $this->log($hostname . '|validateConnection', serialize($response->raw()), 'output', $success);
-                
+
                 return $success;
             } catch (Exception $e) {
                 // Log the exception
@@ -356,99 +310,6 @@ class Enhance extends Module
 
         return false;
     }
-////
-////    /**
-////     * Validates that the given hostname is valid.
-////     *
-////     * @param string $host_name The host name to validate
-////     * @return bool True if the hostname is valid, false otherwise
-////     */
-////    public function validateHostName($host_name)
-////    {
-////// Be sure to uncomment the Server use statement at the top of this file if you are going to uncomment this method
-////        $validator = new Server();
-////        return $validator->isDomain($host_name) || $validator->isIp($host_name);
-////    }
-////
-////    /**
-////     * Validates that at least 2 name servers are set in the given array of name servers.
-////     *
-////     * @param array $name_servers An array of name servers
-////     * @return bool True if the array count is >= 2, false otherwise
-////     */
-////    public function validateNameServerCount($name_servers)
-////    {
-////        if (is_array($name_servers) && count($name_servers) >= 2) {
-////            return true;
-////        }
-////
-////        return false;
-////    }
-////
-////    /**
-////     * Validates that the nameservers given are formatted correctly.
-////     *
-////     * @param array $name_servers An array of name servers
-////     * @return bool True if every name server is formatted correctly, false otherwise
-////     */
-////    public function validateNameServers($name_servers)
-////    {
-////// Be sure that you have also uncommented validateHostName() before you uncomment this method
-////        if (is_array($name_servers)) {
-////            foreach ($name_servers as $name_server) {
-////                if (!$this->validateHostName($name_server)) {
-////                    return false;
-////                }
-////            }
-////        }
-////
-////        return true;
-////    }
-////
-////
-////    /**
-////     * Validates whether or not the connection details are valid by attempting to fetch
-////     * the number of accounts that currently reside on the server.
-////     *
-////     * @param string $password The ISPmanager server password
-////     * @param string $hostname The ISPmanager server hostname
-////     * @param string $user_name The ISPmanager server user name
-////     * @param mixed $use_ssl Whether or not to use SSL
-////     * @param int $account_count The number of existing accounts on the server
-////     * @return bool True if the connection is valid, false otherwise
-////     */
-////    public function validateConnection($password, $hostname, $user_name, $use_ssl, &$account_count)
-////    {
-////        try {
-////// Be sure that you've uncommented the getApi() method if you're uncommenting this code
-//////            $api = $this->getApi($hostname, $user_name, $password, $use_ssl);
-////
-////            $params = compact('hostname', 'user_name', 'password', 'use_ssl');
-////            $masked_params = $params;
-////            $masked_params['user_name'] = '***';
-////            $masked_params['password'] = '***';
-////
-////            $this->log($hostname . '|user', serialize($masked_params), 'input', true);
-////
-////            $response = $api->getAccounts();
-////
-////            $success = false;
-////            if (!isset($response->error)) {
-////                $account_count = isset($response->response) ? count($response->response) : 0;
-////                $success = true;
-////            }
-////
-////            $this->log($hostname . '|user', serialize($response), 'output', $success);
-////
-////            if ($success) {
-////                return true;
-////            }
-////        } catch (Exception $e) {
-////            // Trap any errors encountered, could not validate connection
-////        }
-////
-////        return false;
-////    }
 
 
     /**
@@ -478,38 +339,6 @@ class Enhance extends Module
     public function getModuleRowName($module_row)
     {
         return $module_row->meta->server_label ?? $module_row->meta->hostname ?? 'Enhance Server';
-    }
-
-    /**
-     * Determines which module row should be attempted when a service is provisioned
-     * for the given group based upon the order method set for that group.
-     *
-     * @return int The module row ID to attempt to add the service with
-     * @see Module::getGroupOrderOptions()
-     */
-    public function selectModuleRow($module_group_id)
-    {
-        if (!isset($this->ModuleManager)) {
-            Loader::loadModels($this, ['ModuleManager']);
-        }
-
-        $group = $this->ModuleManager->getGroup($module_group_id);
-
-        if ($group) {
-            switch ($group->add_order) {
-                default:
-                case 'first':
-////
-////                    foreach ($group->rows as $row) {
-////                        return $row->id;
-////                    }
-////
-                    break;
-                case 'roundrobin':
-                    break;
-            }
-        }
-        return 0;
     }
 
     /**
@@ -615,12 +444,12 @@ class Enhance extends Module
                 $customer_name = $client->company ?? 'Customer';
             }
             $customer_email = $client->email ?? '';
-            
+
             // Load ModuleClientMeta for customer data storage/retrieval
             if (!isset($this->ModuleClientMeta)) {
                 Loader::loadModels($this, ['ModuleClientMeta']);
             }
-            
+
             // Check if we already have customer data stored for this client
             $existing_org_id_obj = $this->ModuleClientMeta->get(
                 $vars['client_id'],
@@ -632,21 +461,21 @@ class Enhance extends Module
                 'enhance_login_id',
                 $row->id
             );
-            
+
             // Extract values from objects (ModuleClientMeta returns objects with ->value property)
             $existing_org_id = $existing_org_id_obj ? $existing_org_id_obj->value : null;
             $existing_login_id = $existing_login_id_obj ? $existing_login_id_obj->value : null;
-            
+
             // Debug logging
             //$this->log($row->meta->hostname . '|client_debug', 'Client data: ' . serialize($client), 'output', true);
             $this->log($row->meta->hostname . '|customer_info', 'Name: ' . $customer_name . ', Email: ' . $customer_email, 'output', true);
-            
+
             if ($existing_org_id && $existing_login_id) {
                 $this->log($row->meta->hostname . '|existing_customer', 'Found stored customer data - org_id: ' . $existing_org_id . ', login_id: ' . $existing_login_id, 'output', true);
             } else {
                 $this->log($row->meta->hostname . '|new_customer', 'No stored customer data found, will create new customer', 'output', true);
             }
-            
+
             // Create website with stored customer data (if available) or create new customer
             if ($existing_org_id && $existing_login_id) {
                 // Use existing customer data
@@ -669,20 +498,20 @@ class Enhance extends Module
                     $params['password']
                 );
             }
-            
+
             // Debug logging to see what's happening
             //$this->log($row->meta->hostname . '|addService_debug', 'Create website result: ' . serialize($response), 'output', true);
-            
+
             // Log whether we used existing or new customer
             if (isset($response['existing_customer'])) {
                 $customer_type = $response['existing_customer'] ? 'existing' : 'new';
                 $this->log($row->meta->hostname . '|customer_type', 'Customer type: ' . $customer_type, 'output', true);
             }
-            
+
             // Log which endpoint and data was used for the successful request
             $lastRequest = $api->getLastRequest();
             //$this->log($row->meta->hostname . '|api_request_debug', 'Last request info: ' . serialize($lastRequest), 'output', true);
-            
+
             // Log detailed customer search results
             $detailKeys = ['total_customers', 'getCustomers_error', 'no_customers_data', 'search_complete', 'match_found'];
             foreach ($detailKeys as $key) {
@@ -690,7 +519,7 @@ class Enhance extends Module
                     $this->log($row->meta->hostname . '|search_detail', $key . ': ' . $lastRequest[$key], 'output', true);
                 }
             }
-            
+
             // Log each customer found
             $customerKeys = array_filter(array_keys($lastRequest), function($key) {
                 return strpos($key, 'customer_') === 0 && strpos($key, '_') === strrpos($key, '_');
@@ -698,7 +527,7 @@ class Enhance extends Module
             foreach ($customerKeys as $key) {
                 $this->log($row->meta->hostname . '|customer_list', $key . ': ' . $lastRequest[$key], 'output', true);
             }
-            
+
             // Log member details
             $memberKeys = array_filter(array_keys($lastRequest), function($key) {
                 return strpos($key, 'member_') === 0 || strpos($key, 'members_count_') === 0 || strpos($key, 'no_members_') === 0;
@@ -723,7 +552,7 @@ class Enhance extends Module
                 $customer_org_id = $response['customer_org_id'];
                 $actual_password = $response['password']; // Use the actual password that was used
                 $success = true;
-                
+
                 // Use actual username from API if available, otherwise fall back to generated username
                 if (isset($response['actual_username']) && !empty($response['actual_username'])) {
                     $actual_username = $response['actual_username'];
@@ -732,13 +561,13 @@ class Enhance extends Module
                     $actual_username = $params['username']; // Fallback to generated username
                     $this->log($row->meta->hostname . '|fallback_username', 'Using fallback username: ' . $actual_username, 'output', true);
                 }
-                
+
                 // Log SSH password setting result
                 if (isset($response['ssh_password_set'])) {
                     $ssh_status = $response['ssh_password_set'] ? 'SUCCESS' : 'FAILED';
                     $this->log($row->meta->hostname . '|ssh_password', 'SSH password setting: ' . $ssh_status, 'output', true);
                 }
-                
+
                 // Store customer data for future service creation (only for new customers)
                 if (!$existing_org_id && $customer_org_id && isset($response['login_id'])) {
                     $this->ModuleClientMeta->set(
@@ -752,7 +581,7 @@ class Enhance extends Module
                     );
                     $this->log($row->meta->hostname . '|stored_customer', 'Stored customer data - org_id: ' . $customer_org_id . ', login_id: ' . $response['login_id'], 'output', true);
                 }
-                
+
                 // Update params with actual values from API
                 $params['username'] = $actual_username;
                 $params['password'] = $actual_password;
@@ -836,26 +665,6 @@ class Enhance extends Module
      */
     public function editService($package, $service, array $vars = null, $parent_package = null, $parent_service = null)
     {
-////// Modules often load an API object to perform necessary actions on the remote server.  Below is some code
-////// to ensure that we have a module row to connect to the server and to load the API object.  You will want
-////// to replace the parameters being submitted to the method with those relevant for your module.  Uncomment
-////// the getApi() method below and modify the parameters and doc comments
-////        $row = $this->getModuleRow();
-////
-////        if (!$row) {
-////            $this->Input->setErrors(
-////                ['module_row' => ['missing' => Language::_('Enhance.!error.module_row.missing', true)]]
-////            );
-////
-////            return;
-////        }
-////
-////        $api = $this->getApi($row->meta->host_name, $row->meta->user_name, $row->meta->password, $row->meta->use_ssl);
-////
-////// Modules often find it useful to do some processing and formatting before submitting data to the API.  Uncomment
-////// the getFieldsFromInput() method below and update it to suite your needs.
-////        $params = $this->getFieldsFromInput((array) $vars, $package);
-
         // Set unset checkboxes
         $checkbox_fields = [];
 
@@ -875,6 +684,7 @@ class Enhance extends Module
 
         // Only update the service if 'use_module' is true
         if ($vars['use_module'] == 'true') {
+            // Do nothing, management is handle through service tabs
         }
 
         // Return all the service fields
@@ -923,20 +733,20 @@ class Enhance extends Module
             );
 
             $service_fields = $this->serviceFieldsToObject($service->fields);
-            
+
             if (isset($service_fields->customer_org_id) && isset($service_fields->subscription_id)) {
                 $this->log($row->meta->hostname . '|suspendService', 'Suspending subscription: ' . $service_fields->subscription_id, 'input', true);
-                
+
                 $response = $api->suspendWebsite($service_fields->customer_org_id, $service_fields->subscription_id);
-                
+
                 $success = false;
-                
+
                 if (($errors = $response->errors())) {
                     $this->Input->setErrors(['api' => $errors]);
                 } else {
                     $success = true;
                 }
-                
+
                 $this->log($row->meta->hostname . '|suspendService', 'Suspend result: ' . ($success ? 'success' : 'failed'), 'output', $success);
             } else {
                 $this->log($row->meta->hostname . '|suspendService', 'Missing customer_org_id or subscription_id', 'output', false);
@@ -976,20 +786,20 @@ class Enhance extends Module
             );
 
             $service_fields = $this->serviceFieldsToObject($service->fields);
-            
+
             if (isset($service_fields->customer_org_id) && isset($service_fields->subscription_id)) {
                 $this->log($row->meta->hostname . '|unsuspendService', 'Unsuspending subscription: ' . $service_fields->subscription_id, 'input', true);
-                
+
                 $response = $api->unsuspendWebsite($service_fields->customer_org_id, $service_fields->subscription_id);
-                
+
                 $success = false;
-                
+
                 if (($errors = $response->errors())) {
                     $this->Input->setErrors(['api' => $errors]);
                 } else {
                     $success = true;
                 }
-                
+
                 $this->log($row->meta->hostname . '|unsuspendService', 'Unsuspend result: ' . ($success ? 'success' : 'failed'), 'output', $success);
             } else {
                 $this->log($row->meta->hostname . '|unsuspendService', 'Missing customer_org_id or subscription_id', 'output', false);
@@ -1029,20 +839,20 @@ class Enhance extends Module
             );
 
             $service_fields = $this->serviceFieldsToObject($service->fields);
-            
+
             if (isset($service_fields->customer_org_id) && isset($service_fields->subscription_id)) {
                 $this->log($row->meta->hostname . '|cancelService', 'Deleting subscription: ' . $service_fields->subscription_id, 'input', true);
-                
+
                 $response = $api->deleteWebsite($service_fields->customer_org_id, $service_fields->subscription_id);
-                
+
                 $success = false;
-                
+
                 if (($errors = $response->errors())) {
                     $this->Input->setErrors(['api' => $errors]);
                 } else {
                     $success = true;
                 }
-                
+
                 $this->log($row->meta->hostname . '|cancelService', 'Delete result: ' . ($success ? 'success' : 'failed'), 'output', $success);
             } else {
                 $this->log($row->meta->hostname . '|cancelService', 'Missing customer_org_id or subscription_id', 'output', false);
@@ -1112,17 +922,6 @@ class Enhance extends Module
             ]
         ];
 
-        // Unset irrelevant rules when editing a service
-        if ($edit) {
-            $edit_fields = ['domain', 'username', 'password'];
-
-            foreach ($rules as $field => $rule) {
-                if (!in_array($field, $edit_fields)) {
-                    unset($rules[$field]);
-                }
-            }
-        }
-
         return $rules;
     }
 
@@ -1147,45 +946,6 @@ class Enhance extends Module
     public function validateUsername($username)
     {
         return preg_match('/^[a-zA-Z0-9][a-zA-Z0-9_-]{2,15}$/', $username);
-    }
-
-    /**
-     * Updates the package for the service on the remote server. Sets Input
-     * errors on failure, preventing the service's package from being changed.
-     *
-     * @param stdClass $package_from A stdClass object representing the current package
-     * @param stdClass $package_to A stdClass object representing the new package
-     * @param stdClass $service A stdClass object representing the current service
-     * @param stdClass $parent_package A stdClass object representing the parent
-     *  service's selected package (if the current service is an addon service)
-     * @param stdClass $parent_service A stdClass object representing the parent
-     *  service of the service being changed (if the current service is an addon service)
-     * @return mixed null to maintain the existing meta fields or a numerically
-     *  indexed array of meta fields to be stored for this service containing:
-     *  - key The key for this meta field
-     *  - value The value for this key
-     *  - encrypted Whether or not this field should be encrypted (default 0, not encrypted)
-     * @see Module::getModule()
-     * @see Module::getModuleRow()
-     */
-    public function changeServicePackage(
-        $package_from,
-        $package_to,
-        $service,
-        $parent_package = null,
-        $parent_service = null
-    ) {
-        if (($row = $this->getModuleRow())) {
-////            $api = $this->getApi(
-////                $row->meta->host_name,
-////                $row->meta->user_name,
-////                $row->meta->password,
-////                ($row->meta->use_ssl == 'true')
-////            );
-////
-        }
-
-        return null;
     }
 
     /**
@@ -1220,10 +980,10 @@ class Enhance extends Module
             ? $vars['username']
             : $this->generateUsername($domain);
         $password = !empty($vars['password']) ? $vars['password'] : $this->generatePassword();
-        
+
         // Get package name from the package meta
         $package_name = isset($package->meta->package) ? $package->meta->package : 'default';
-        
+
         $fields = [
             'domain' => $domain,
             'username' => $username,
@@ -1273,29 +1033,29 @@ class Enhance extends Module
     private function generatePassword($min_length = 12, $max_length = 16)
     {
         $length = mt_rand(max($min_length, 10), min($max_length, 16));
-        
+
         // Character sets
         $lowercase = 'abcdefghijklmnopqrstuvwxyz';
         $uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
         $numbers = '0123456789';
         $specials = '!@#$%^&*()';
-        
+
         // Ensure we have at least one of each required type
         $password = '';
         $password .= $lowercase[mt_rand(0, strlen($lowercase) - 1)]; // At least 1 lowercase
         $password .= $uppercase[mt_rand(0, strlen($uppercase) - 1)]; // At least 1 uppercase
         $password .= $numbers[mt_rand(0, strlen($numbers) - 1)];     // At least 1 number
         $password .= $specials[mt_rand(0, strlen($specials) - 1)];   // At least 1 special char
-        
+
         // Fill remaining length with random characters from all sets
         $all_chars = $lowercase . $uppercase . $numbers . $specials;
         for ($i = 4; $i < $length; $i++) {
             $password .= $all_chars[mt_rand(0, strlen($all_chars) - 1)];
         }
-        
+
         // Shuffle the password to randomize the order
         $password = str_shuffle($password);
-        
+
         return $password;
     }
 
@@ -1542,11 +1302,11 @@ class Enhance extends Module
 
         if (!empty($post)) {
             Loader::loadModels($this, ['Services']);
-            
+
             // Validate password
             if (isset($post['password']) && !empty($post['password'])) {
                 $row = $this->getModuleRow();
-                
+
                 if ($row) {
                     $api = $this->getApi(
                         $row->meta->server_label,
@@ -1554,25 +1314,25 @@ class Enhance extends Module
                         $row->meta->org_id,
                         $row->meta->api_token
                     );
-                    
+
                     if (isset($service_fields->website_id)) {
                         $this->log($row->meta->hostname . '|resetPassword', serialize($service_fields->website_id), 'input', true);
-                        
+
                         $response = $api->resetWebsitePassword($service_fields->website_id, $post['password']);
-                        
+
                         $success = false;
-                        
+
                         if (($errors = $response->errors())) {
                             $this->Input->setErrors(['password' => ['change' => Language::_('Enhance.!error.password.change', true)]]);
                         } else {
                             $success = true;
-                            
+
                             // Update the service password field
                             $this->Services->edit($service->id, ['password' => $post['password']]);
-                            
+
                             $this->Input->setMessage('success', Language::_('Enhance.success.password.changed', true));
                         }
-                        
+
                         $this->log($row->meta->hostname . '|resetPassword', serialize($response->raw()), 'output', $success);
                     }
                 }
@@ -1620,11 +1380,11 @@ class Enhance extends Module
 
         if (!empty($post)) {
             Loader::loadModels($this, ['Services']);
-            
+
             // Validate password
             if (isset($post['password']) && !empty($post['password'])) {
                 $row = $this->getModuleRow();
-                
+
                 if ($row) {
                     $api = $this->getApi(
                         $row->meta->server_label,
@@ -1632,25 +1392,25 @@ class Enhance extends Module
                         $row->meta->org_id,
                         $row->meta->api_token
                     );
-                    
+
                     if (isset($service_fields->website_id)) {
                         $this->log($row->meta->hostname . '|resetPassword', serialize($service_fields->website_id), 'input', true);
-                        
+
                         $response = $api->resetWebsitePassword($service_fields->website_id, $post['password']);
-                        
+
                         $success = false;
-                        
+
                         if (($errors = $response->errors())) {
                             $this->Input->setErrors(['password' => ['change' => Language::_('Enhance.!error.password.change', true)]]);
                         } else {
                             $success = true;
-                            
+
                             // Update the service password field
                             $this->Services->edit($service->id, ['password' => $post['password']]);
-                            
+
                             $this->Input->setMessage('success', Language::_('Enhance.success.password.changed', true));
                         }
-                        
+
                         $this->log($row->meta->hostname . '|resetPassword', serialize($response->raw()), 'output', $success);
                     }
                 }
@@ -1682,22 +1442,7 @@ class Enhance extends Module
      */
     public function getAdminAddFields($package, $vars = null)
     {
-        Loader::loadHelpers($this, ['Html']);
-
-        $fields = new ModuleFields();
-
-        // Set the Domain field
-        $domain = $fields->label(Language::_('Enhance.service_fields.domain', true), 'enhance_domain');
-        $domain->attach(
-            $fields->fieldText(
-                'domain',
-                (isset($vars->domain) ? $vars->domain : null),
-                ['id' => 'enhance_domain']
-            )
-        );
-        $fields->setField($domain);
-
-        return $fields;
+        return $this->getServiceFields($vars);
     }
 
     /**
@@ -1710,22 +1455,7 @@ class Enhance extends Module
      */
     public function getAdminEditFields($package, $vars = null)
     {
-        Loader::loadHelpers($this, ['Html']);
-
-        $fields = new ModuleFields();
-
-        // Set the Domain field
-        $domain = $fields->label(Language::_('Enhance.service_fields.domain', true), 'enhance_domain');
-        $domain->attach(
-            $fields->fieldText(
-                'domain',
-                (isset($vars->domain) ? $vars->domain : null),
-                ['id' => 'enhance_domain']
-            )
-        );
-        $fields->setField($domain);
-
-        return $fields;
+        return $this->getServiceFields($vars);
     }
 
     /**
@@ -1738,22 +1468,7 @@ class Enhance extends Module
      */
     public function getClientAddFields($package, $vars = null)
     {
-        Loader::loadHelpers($this, ['Html']);
-
-        $fields = new ModuleFields();
-
-        // Set the Domain field
-        $domain = $fields->label(Language::_('Enhance.service_fields.domain', true), 'enhance_domain');
-        $domain->attach(
-            $fields->fieldText(
-                'domain',
-                (isset($vars->domain) ? $vars->domain : null),
-                ['id' => 'enhance_domain']
-            )
-        );
-        $fields->setField($domain);
-
-        return $fields;
+        return $this->getServiceFields($vars);
     }
 
     /**
@@ -1765,6 +1480,18 @@ class Enhance extends Module
      *  as well as any additional HTML markup to include
      */
     public function getClientEditFields($package, $vars = null)
+    {
+        return $this->getServiceFields($vars);
+    }
+
+    /**
+     * A centralized method for fetching service fields since they are the same for admin/client add/edit
+     *
+     * @param $vars stdClass A stdClass object representing a set of post fields
+     * @return ModuleFields A ModuleFields object, containg the fields to render
+     *  as well as any additional HTML markup to include
+     */
+    private function getServiceFields($vars = null)
     {
         Loader::loadHelpers($this, ['Html']);
 
