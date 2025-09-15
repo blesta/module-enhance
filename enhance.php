@@ -248,7 +248,11 @@ class Enhance extends Module
                     'message' => Language::_('Enhance.!error.api_token.empty', true)
                 ],
                 'valid' => [
-                    'rule' => [[$this, 'validateConnection']],
+                    'rule' => [[
+                        $this, 'validateConnection'],
+                        ['_linked' => 'hostname'],
+                        ['_linked' => 'org_id']
+                    ],
                     'message' => Language::_('Enhance.!error.api_token.valid', true)
                 ]
             ]
@@ -279,14 +283,6 @@ class Enhance extends Module
      */
     public function validateConnection($api_token, $hostname = null, $org_id = null)
     {
-        // Get hostname and org_id from the current validation context if not provided
-        if ($hostname === null && isset($this->Input->validates_against['hostname'])) {
-            $hostname = $this->Input->validates_against['hostname'];
-        }
-        if ($org_id === null && isset($this->Input->validates_against['org_id'])) {
-            $org_id = $this->Input->validates_against['org_id'];
-        }
-
         if ($hostname && $org_id && $api_token) {
             try {
                 $api = $this->getApi('test', $hostname, $org_id, $api_token);
@@ -489,7 +485,7 @@ class Enhance extends Module
                 );
             } else {
                 // Create new customer and website
-                $this->log($row->meta->hostname . '|creating_customer', 'Creating new customer for website', 'output', true);
+                $this->log($row->meta->hostname . '|creating_customer', 'Creating new customer and website', 'output', true);
                 $response = $api->createWebsite(
                     $params['domain'],
                     $params['package'],
@@ -676,7 +672,7 @@ class Enhance extends Module
 
         $service_fields = $this->serviceFieldsToObject($service->fields);
 
-        $this->validateService($package, $vars, true);
+        $this->validateServiceEdit($package, $vars);
 
         if ($this->Input->errors()) {
             return;
@@ -692,10 +688,10 @@ class Enhance extends Module
         $return = [];
         $fields = ['domain', 'username', 'password', 'website_id', 'customer_email'];
         foreach ($fields as $field) {
-            if (isset($vars[$field]) || isset($service_fields[$field])) {
+            if (isset($vars[$field]) || isset($service_fields->{$field})) {
                 $return[] = [
                     'key' => $field,
-                    'value' => $vars[$field] ?? $service_fields[$field],
+                    'value' => $vars[$field] ?? $service_fields->{$field},
                     'encrypted' => (in_array($field, $encrypted_fields) ? 1 : 0)
                 ];
             }
@@ -1293,6 +1289,11 @@ class Enhance extends Module
         array $post = null,
         array $files = null
     ) {
+        // Load ModuleClientMeta for customer data storage/retrieval
+        if (!isset($this->ModuleClientMeta)) {
+            Loader::loadModels($this, ['ModuleClientMeta']);
+        }
+
         $this->view = new View('tabChangePassword', 'default');
         $this->view->base_uri = $this->base_uri;
         // Load the helpers required for this view
@@ -1315,10 +1316,16 @@ class Enhance extends Module
                         $row->meta->api_token
                     );
 
-                    if (isset($service_fields->website_id)) {
-                        $this->log($row->meta->hostname . '|resetPassword', serialize($service_fields->website_id), 'input', true);
+                    $existing_login_id_obj = $this->ModuleClientMeta->get(
+                        $service->client_id,
+                        'enhance_login_id',
+                        $row->id
+                    );
 
-                        $response = $api->resetWebsitePassword($service_fields->website_id, $post['password']);
+                    if (isset($existing_login_id_obj->value)) {
+                        $this->log($row->meta->hostname . '|resetPassword', serialize($existing_login_id_obj->value), 'input', true);
+
+                        $response = $api->updateLoginPassword($existing_login_id_obj->value, $post['password']);
 
                         $success = false;
 
@@ -1330,7 +1337,7 @@ class Enhance extends Module
                             // Update the service password field
                             $this->Services->edit($service->id, ['password' => $post['password']]);
 
-                            $this->Input->setMessage('success', Language::_('Enhance.success.password.changed', true));
+                            $this->setMessage('success', Language::_('Enhance.success.password.changed', true));
                         }
 
                         $this->log($row->meta->hostname . '|resetPassword', serialize($response->raw()), 'output', $success);
@@ -1371,6 +1378,11 @@ class Enhance extends Module
         array $post = null,
         array $files = null
     ) {
+        // Load ModuleClientMeta for customer data storage/retrieval
+        if (!isset($this->ModuleClientMeta)) {
+            Loader::loadModels($this, ['ModuleClientMeta']);
+        }
+
         $this->view = new View('tabClientChangePassword', 'default');
         $this->view->base_uri = $this->base_uri;
         // Load the helpers required for this view
@@ -1393,10 +1405,16 @@ class Enhance extends Module
                         $row->meta->api_token
                     );
 
-                    if (isset($service_fields->website_id)) {
-                        $this->log($row->meta->hostname . '|resetPassword', serialize($service_fields->website_id), 'input', true);
+                    $existing_login_id_obj = $this->ModuleClientMeta->get(
+                        $service->client_id,
+                        'enhance_login_id',
+                        $row->id
+                    );
 
-                        $response = $api->resetWebsitePassword($service_fields->website_id, $post['password']);
+                    if (isset($existing_login_id_obj->value)) {
+                        $this->log($row->meta->hostname . '|resetPassword', serialize($existing_login_id_obj->value), 'input', true);
+
+                        $response = $api->updateLoginPassword($existing_login_id_obj->value, $post['password']);
 
                         $success = false;
 
@@ -1408,7 +1426,7 @@ class Enhance extends Module
                             // Update the service password field
                             $this->Services->edit($service->id, ['password' => $post['password']]);
 
-                            $this->Input->setMessage('success', Language::_('Enhance.success.password.changed', true));
+                            $this->setMessage('success', Language::_('Enhance.success.password.changed', true));
                         }
 
                         $this->log($row->meta->hostname . '|resetPassword', serialize($response->raw()), 'output', $success);
