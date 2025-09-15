@@ -21,8 +21,8 @@
         "name_key": "domain"
     },
     "email_tags": {
-        "module": ["server_label","hostname","org_id","api_token"],
+        "module": ["server_label", "hostname", "org_id", "api_token"],
         "package": ["package"],
-        "service": ["domain","username","password","website_id","customer_email"]
+        "service": ["domain", "username", "password", "website_id", "customer_email"]
     }
 }

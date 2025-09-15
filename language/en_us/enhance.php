@@ -37,32 +37,17 @@ $lang['Enhance.manage.module_groups.confirm_delete'] = 'Are you sure you want to
 
 $lang['Enhance.manage.module_groups.no_results'] = 'There is no Server Group';
 
-
 $lang['Enhance.order_options.roundrobin'] = 'Evenly Distribute Among Servers';
 $lang['Enhance.order_options.first'] = 'First Non-full Server';
 
 
 // Add row
 $lang['Enhance.add_row.box_title'] = 'Enhance - Add Server';
-////$lang['Enhance.add_row.name_servers_title'] = 'Name Servers';
-////$lang['Enhance.add_row.notes_title'] = 'Notes';
-////$lang['Enhance.add_row.name_server_btn'] = 'Add Additional Name Server';
-////$lang['Enhance.add_row.name_server_col'] = 'Name Server';
-////$lang['Enhance.add_row.name_server_host_col'] = 'Hostname';
-////$lang['Enhance.add_row.name_server'] = 'Name server %1$s'; // %1$s is the name server number (e.g. 3)
-////$lang['Enhance.add_row.remove_name_server'] = 'Remove';
 $lang['Enhance.add_row.add_btn'] = 'Add Server';
 
 
 // Edit row
 $lang['Enhance.edit_row.box_title'] = 'Enhance - Edit Server';
-////$lang['Enhance.edit_row.name_servers_title'] = 'Name Servers';
-////$lang['Enhance.edit_row.notes_title'] = 'Notes';
-////$lang['Enhance.edit_row.name_server_btn'] = 'Add Additional Name Server';
-////$lang['Enhance.edit_row.name_server_col'] = 'Name Server';
-////$lang['Enhance.edit_row.name_server_host_col'] = 'Hostname';
-////$lang['Enhance.edit_row.name_server'] = 'Name server %1$s'; // %1$s is the name server number (e.g. 3)
-////$lang['Enhance.edit_row.remove_name_server'] = 'Remove';
 $lang['Enhance.edit_row.edit_btn'] = 'Update Server';
 
 
@@ -71,8 +56,6 @@ $lang['Enhance.row_meta.server_label'] = 'Server Label';
 $lang['Enhance.row_meta.hostname'] = 'Hostname';
 $lang['Enhance.row_meta.org_id'] = 'Organization ID';
 $lang['Enhance.row_meta.api_token'] = 'API Token';
-
-
 
 
 // Errors
@@ -88,19 +71,21 @@ $lang['Enhance.!error.password.length'] = 'The password must be at least 8 chara
 $lang['Enhance.!error.password.change'] = 'Unable to change the password. Please try again.';
 
 
-
 // Change Password
 $lang['Enhance.tabChangePassword'] = 'Change Password';
 $lang['Enhance.tabChangePassword.header'] = 'Change Password';
 $lang['Enhance.tabChangePassword.submit'] = 'Submit';
 
-// Client Change Password  
+
+// Client Change Password
 $lang['Enhance.tabClientChangePassword'] = 'Change Password';
 $lang['Enhance.tabClientChangePassword.header'] = 'Change Password';
 $lang['Enhance.tabClientChangePassword.submit'] = 'Submit';
 
+
 // Success messages
 $lang['Enhance.success.password.changed'] = 'Password successfully changed.';
+
 
 // Service info
 $lang['Enhance.service_info.domain'] = 'Domain';
@@ -110,18 +95,12 @@ $lang['Enhance.service_info.password'] = 'Password';
 $lang['Enhance.service_info.options'] = 'Options';
 $lang['Enhance.service_info.option_login'] = 'Login to Control Panel';
 
+
 // Service Fields
 $lang['Enhance.service_fields.domain'] = 'Domain';
 $lang['Enhance.service_fields.username'] = 'Username';
 $lang['Enhance.service_fields.password'] = 'Password';
 
 
-
-
 // Package Fields
 $lang['Enhance.package_fields.package'] = 'Package';
-
-
-
-// Cron Tasks
-

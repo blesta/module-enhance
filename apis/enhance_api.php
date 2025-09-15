@@ -50,7 +50,7 @@ class EnhanceApi
         $this->hostname = $hostname;
         $this->org_id = $org_id;
         $this->api_token = $api_token;
-        
+
         // Construct API URL with port 2087 if not already specified
         $port = (strpos($hostname, ':') !== false) ? '' : ':2087';
         $this->apiUrl = 'https://' . $hostname . $port . '/api';
@@ -141,7 +141,7 @@ class EnhanceApi
     {
         // Step 1: Create subscription for the existing customer
         $subscriptionResponse = $this->createCustomerSubscription($customer_org_id, $package);
-        
+
         if ($subscriptionResponse->errors()) {
             return [
                 'error' => 'Failed to create customer subscription',
@@ -149,22 +149,22 @@ class EnhanceApi
                 'customer_org_id' => $customer_org_id
             ];
         }
-        
+
         $subscriptionResult = $subscriptionResponse->response();
         $subscription_id = $subscriptionResult->id ?? null;
-        
+
         if (!$subscription_id) {
             return ['error' => 'No subscription ID returned', 'response' => $subscriptionResponse];
         }
-        
+
         // Step 2: Create website using subscription
         $websiteData = [
             'domain' => $domain,
             'subscriptionId' => $subscription_id
         ];
-        
+
         $websiteResponse = $this->apiRequest("orgs/{$customer_org_id}/websites", $websiteData, 'POST');
-        
+
         if ($websiteResponse->errors()) {
             return [
                 'error' => 'Failed to create website',
@@ -173,10 +173,10 @@ class EnhanceApi
                 'customer_org_id' => $customer_org_id
             ];
         }
-        
+
         $websiteResult = $websiteResponse->response();
         $website_id = $websiteResult->id ?? null;
-        
+
         // Fetch complete website details to get actual unixUser
         $actual_username = null;
         if ($website_id) {
@@ -186,7 +186,7 @@ class EnhanceApi
                 $actual_username = $websiteDetails->unixUser ?? null;
             }
         }
-        
+
         // Set SSH password for the website (enables SSH access with service password)
         $ssh_password_set = false;
         if ($website_id) {
@@ -195,7 +195,7 @@ class EnhanceApi
                 $ssh_password_set = true;
             }
         }
-        
+
         return [
             'success' => true,
             'website_id' => $website_id,
@@ -224,19 +224,19 @@ class EnhanceApi
     {
         // Step 1: Create new customer (organization + login + member)
         $customerResult = $this->createCustomer($customer_name, $customer_email, $password);
-        
+
         if (isset($customerResult['error'])) {
             return $customerResult; // Return customer creation error
         }
-        
+
         $customer_org_id = $customerResult['customer_org_id'];
         $login_id = $customerResult['login_id'];
         $member_id = $customerResult['member_id'];
         $actual_password = $customerResult['password'];
-        
+
         // Step 2: Create subscription for the customer
         $subscriptionResponse = $this->createCustomerSubscription($customer_org_id, $package);
-        
+
         if ($subscriptionResponse->errors()) {
             return [
                 'error' => 'Failed to create customer subscription',
@@ -244,10 +244,10 @@ class EnhanceApi
                 'customer_info' => $customerResult
             ];
         }
-        
+
         $subscriptionResult = $subscriptionResponse->response();
         $subscription_id = $subscriptionResult->id ?? null;
-        
+
         if (!$subscription_id) {
             return [
                 'error' => 'No subscription ID returned',
@@ -255,16 +255,16 @@ class EnhanceApi
                 'customer_info' => $customerResult
             ];
         }
-        
+
         // Step 3: Create website using subscription
         $websiteData = [
             'domain' => $domain,
             'subscriptionId' => $subscription_id
         ];
-        
+
         // Websites are created under customer organization
         $websiteResponse = $this->apiRequest("orgs/{$customer_org_id}/websites", $websiteData, 'POST');
-        
+
         if ($websiteResponse->errors()) {
             return [
                 'error' => 'Failed to create website',
@@ -273,10 +273,10 @@ class EnhanceApi
                 'subscription_id' => $subscription_id
             ];
         }
-        
+
         $websiteResult = $websiteResponse->response();
         $website_id = $websiteResult->id ?? null;
-        
+
         // Fetch complete website details to get actual unixUser
         $actual_username = null;
         if ($website_id) {
@@ -286,7 +286,7 @@ class EnhanceApi
                 $actual_username = $websiteDetails->unixUser ?? null;
             }
         }
-        
+
         // Set SSH password for the website (enables SSH access with service password)
         $ssh_password_set = false;
         if ($website_id) {
@@ -295,13 +295,13 @@ class EnhanceApi
                 $ssh_password_set = true;
             }
         }
-        
+
         // Log successful creation details
         $this->lastRequest['successful_endpoint'] = "orgs/{$customer_org_id}/websites";
         $this->lastRequest['successful_data'] = $websiteData;
         $this->lastRequest['customer_endpoint_used'] = true;
         $this->lastRequest['creation_method'] = 'subscription-based';
-        
+
         return [
             'success' => true,
             'website_id' => $website_id,
@@ -382,33 +382,33 @@ class EnhanceApi
             "orgs/{$this->org_id}/accounts/{$website_id}",
             "accounts/{$website_id}"
         ];
-        
+
         $lastResponse = null;
-        
+
         foreach ($endpoints as $endpoint) {
             $response = $this->apiRequest($endpoint, [], 'GET');
             $lastResponse = $response;
-            
+
             // If we get a 404, try the next endpoint
             if ($response->status() != '404') {
                 return $response;
             }
         }
-        
+
         return $lastResponse;
     }
 
     /**
-     * Reset website password
+     * Reset login password
      *
-     * @param string $website_id The website ID
+     * @param string $login_id The login ID
      * @param string $new_password The new password
      * @return EnhanceResponse
      */
-    public function resetWebsitePassword($website_id, $new_password)
+    public function updateLoginPassword($login_id, $new_password)
     {
-        $data = ['password' => $new_password];
-        return $this->apiRequest("websites/{$website_id}/password", $data, 'PATCH');
+        $data = ['newPassword' => $new_password];
+        return $this->apiRequest("v2/logins/{$login_id}/password", $data, 'PUT');
     }
 
     /**
@@ -482,43 +482,43 @@ class EnhanceApi
     public function findCustomerByEmailWithLogging($email, $logCallback = null)
     {
         if ($logCallback) $logCallback("Starting login search for email: $email");
-        
+
         // Get all logins for the main organization
         $response = $this->getLogins();
-        
+
         if ($response->errors()) {
             if ($logCallback) $logCallback("ERROR: Failed to get logins - " . serialize($response->errors()));
             return null;
         }
-        
+
         $logins = $response->response();
         if (!isset($logins->items) || !is_array($logins->items)) {
             if ($logCallback) $logCallback("ERROR: No login items in API response");
             return null;
         }
-        
+
         $loginCount = count($logins->items);
         if ($logCallback) $logCallback("Found $loginCount logins to check in main organization");
-        
+
         // Search through logins to find matching email
         for ($index = 0; $index < $loginCount; $index++) {
             $login = $logins->items[$index];
             $loginEmail = $login->email ?? 'no-email';
             $loginId = $login->id ?? null;
             $loginName = $login->name ?? 'Unknown';
-            
+
             if ($logCallback) $logCallback("Checking login $index: '$loginName' - email: '$loginEmail'");
-            
+
             // Compare emails (case-sensitive)
             if ($loginEmail === $email) {
                 if ($logCallback) $logCallback("LOGIN MATCH FOUND! '$loginEmail' === '$email'");
-                
+
                 // We also try to find the customer record
                 $customerInfo = $this->findCustomerForLogin($loginId, $logCallback);
-                
+
                 if ($customerInfo) {
                     if ($logCallback) $logCallback("Found customer record: " . serialize($customerInfo));
-                    
+
                     return [
                         'customer_id' => $customerInfo['id'],
                         'customer_org_id' => $this->org_id,
@@ -528,7 +528,7 @@ class EnhanceApi
                     ];
                 } else {
                     if ($logCallback) $logCallback("WARNING: Found login but no customer record. Using login info.");
-                    
+
                     // Return login info with main org as fallback
                     return [
                         'customer_id' => null,
@@ -542,11 +542,11 @@ class EnhanceApi
                 if ($logCallback) $logCallback("No match: '$loginEmail' !== '$email'");
             }
         }
-        
+
         if ($logCallback) $logCallback("Search complete - no matching login found for email: $email");
         return null;
     }
-    
+
     /**
      * Find customer record by searching customers under main organization
      *
@@ -557,18 +557,18 @@ class EnhanceApi
     private function findCustomerForLogin($loginId, $logCallback = null)
     {
         if ($logCallback) $logCallback("Searching for customer records under main org");
-        
+
         // Get all customers under the main organization
         $response = $this->getCustomers();
-        
+
         if ($response->errors()) {
             if ($logCallback) $logCallback("ERROR: Failed to get customers - " . serialize($response->errors()));
             return null;
         }
-        
+
         $customers = $response->response();
         if ($logCallback) $logCallback("DEBUG: Raw customers response structure: " . json_encode($customers));
-        
+
         if (!isset($customers->data) || !is_array($customers->data)) {
             if (!isset($customers->items) || !is_array($customers->items)) {
                 if ($logCallback) $logCallback("ERROR: No customer data in response. Available keys: " . implode(', ', array_keys((array)$customers)));
@@ -579,25 +579,25 @@ class EnhanceApi
         } else {
             $customersList = $customers->data;
         }
-        
+
         if ($logCallback) $logCallback("Found " . count($customersList) . " customers in main organization");
-        
+
         // For now, just return the first customer if any exist
         // In a real implementation, we might match by name or other criteria
         if (count($customersList) > 0) {
             $customer = $customersList[0];
             if ($logCallback) $logCallback("Returning first customer: " . ($customer->name ?? 'Unknown'));
-            
+
             return [
                 'id' => $customer->id ?? null,
                 'name' => $customer->name ?? 'Unknown Customer'
             ];
         }
-        
+
         if ($logCallback) $logCallback("No customers found in main organization");
         return null;
     }
-    
+
     /**
      * Find which customer organization a login belongs to
      *
@@ -608,61 +608,61 @@ class EnhanceApi
     private function findCustomerOrgForLogin($loginId, $logCallback = null)
     {
         if ($logCallback) $logCallback("Searching for customer organization containing login ID: $loginId");
-        
+
         // Get all customer organizations
         $response = $this->getCustomers();
-        
+
         if ($response->errors()) {
             if ($logCallback) $logCallback("ERROR: Failed to get customers - " . serialize($response->errors()));
             return null;
         }
-        
+
         $customers = $response->response();
         if ($logCallback) $logCallback("DEBUG: Raw customers response structure: " . json_encode($customers));
-        
+
         if (!isset($customers->data) || !is_array($customers->data)) {
             if ($logCallback) $logCallback("ERROR: No customer data in response. Available keys: " . implode(', ', array_keys((array)$customers)));
             return null;
         }
-        
+
         $customerCount = count($customers->data);
         if ($logCallback) $logCallback("Checking $customerCount customer organizations");
-        
+
         // Search through each customer organization
         for ($index = 0; $index < $customerCount; $index++) {
             $customer = $customers->data[$index];
             $customer_org_id = $customer->id ?? null;
             $customer_name = $customer->name ?? 'Unknown';
-            
+
             if ($logCallback) $logCallback("Checking customer $index: '$customer_name' (ID: $customer_org_id)");
-            
+
             if (!$customer_org_id) {
                 continue;
             }
-            
+
             // Get members of this customer organization
             $membersResponse = $this->apiRequest("orgs/{$customer_org_id}/members", [], 'GET');
-            
+
             if ($membersResponse->errors()) {
                 if ($logCallback) $logCallback("ERROR getting members for customer $index: " . serialize($membersResponse->errors()));
                 continue;
             }
-            
+
             $members = $membersResponse->response();
             if (!isset($members->data) || !is_array($members->data)) {
                 if ($logCallback) $logCallback("No members data for customer $index");
                 continue;
             }
-            
+
             // Check each member to see if they have the matching login ID
             foreach ($members->data as $memberIndex => $member) {
                 $memberLoginId = $member->login->id ?? null;
-                
+
                 if ($logCallback) $logCallback("Member {$index}-{$memberIndex} has login ID: $memberLoginId");
-                
+
                 if ($memberLoginId === $loginId) {
                     if ($logCallback) $logCallback("FOUND! Customer organization '$customer_name' contains login ID $loginId");
-                    
+
                     return [
                         'customer_org_id' => $customer_org_id,
                         'customer_name' => $customer_name,
@@ -671,11 +671,11 @@ class EnhanceApi
                 }
             }
         }
-        
+
         if ($logCallback) $logCallback("Login ID $loginId not found in any customer organization");
         return null;
     }
-    
+
     /**
      * Find existing customer organization by email address
      *
@@ -696,7 +696,7 @@ class EnhanceApi
     public function getCustomer($email)
     {
         $customerInfo = $this->findCustomerByEmail($email);
-        
+
         if ($customerInfo) {
             // Return a mock successful response
             return new EnhanceResponse(['content' => json_encode(['found' => true, 'data' => $customerInfo]), 'headers' => []]);
@@ -717,11 +717,11 @@ class EnhanceApi
         $data = [
             'name' => trim($name)
         ];
-        
+
         // createCustomer(serverOrgId, customerData)
         return $this->apiRequest("orgs/{$this->org_id}/customers", $data, 'POST');
     }
-    
+
     /**
      * Create login credentials for customer (step 2 of 3)
      *
@@ -738,29 +738,29 @@ class EnhanceApi
             'name' => trim($name),
             'password' => $password
         ];
-        
+
         // Try multiple endpoint patterns
         $endpoints = [
             "orgs/{$customer_org_id}/logins",
             "logins?orgId={$customer_org_id}",
             "logins"
         ];
-        
+
         $lastResponse = null;
-        
+
         foreach ($endpoints as $endpoint) {
             $response = $this->apiRequest($endpoint, $data, 'POST');
             $lastResponse = $response;
-            
+
             // If we get a successful response (not 404), return it
             if ($response->status() != '404') {
                 return $response;
             }
         }
-        
+
         return $lastResponse;
     }
-    
+
     /**
      * Create member to associate login with organization (step 3 of 3)
      *
@@ -774,10 +774,10 @@ class EnhanceApi
             'loginId' => $login_id,
             'roles' => ['Owner']
         ];
-        
+
         return $this->apiRequest("orgs/{$customer_org_id}/members", $data, 'POST');
     }
-    
+
     /**
      * Create a complete customer - all under main org
      *
@@ -792,42 +792,42 @@ class EnhanceApi
         if (!$password) {
             $password = $this->generatePassword();
         }
-        
+
         // Step 1: Create customer record under main organization
         $customerResponse = $this->createCustomerOrganization($name);
         if ($customerResponse->errors()) {
             return ['error' => 'Failed to create customer', 'response' => $customerResponse];
         }
-        
+
         $customerResult = $customerResponse->response();
         $customer_org_id = $customerResult->id ?? null;
-        
+
         if (!$customer_org_id) {
             return ['error' => 'No customer organization ID returned', 'response' => $customerResponse, 'debug_response' => json_encode($customerResult)];
         }
-        
+
         // Step 2: Create login credentials under customer organization
         $loginResponse = $this->createCustomerLogin($customer_org_id, $email, $name, $password);
         if ($loginResponse->errors()) {
             return ['error' => 'Failed to create customer login', 'response' => $loginResponse, 'customer_org_id' => $customer_org_id];
         }
-        
+
         $loginResult = $loginResponse->response();
         $login_id = $loginResult->id ?? null;
-        
+
         if (!$login_id) {
             return ['error' => 'No login ID returned', 'response' => $loginResponse, 'customer_org_id' => $customer_org_id];
         }
-        
+
         // Step 3: Create member association under customer organization
         $memberResponse = $this->createCustomerMember($customer_org_id, $login_id);
         if ($memberResponse->errors()) {
             return ['error' => 'Failed to create customer member', 'response' => $memberResponse, 'customer_org_id' => $customer_org_id, 'login_id' => $login_id];
         }
-        
+
         $memberResult = $memberResponse->response();
         $member_id = $memberResult->id ?? null;
-        
+
         return [
             'success' => true,
             'customer_org_id' => $customer_org_id, // Customer organization ID returned from API
@@ -838,7 +838,7 @@ class EnhanceApi
             'name' => $name
         ];
     }
-    
+
     /**
      * Create a subscription for a customer
      *
@@ -851,11 +851,11 @@ class EnhanceApi
         $data = [
             'planId' => intval($plan_id)
         ];
-        
+
         // Subscriptions are created under customer organization
         return $this->apiRequest("orgs/{$this->org_id}/customers/{$customer_org_id}/subscriptions", $data, 'POST');
     }
-    
+
     /**
      * Update a subscription (e.g., for suspend/unsuspend)
      *
@@ -869,7 +869,7 @@ class EnhanceApi
         // Subscriptions are managed under customer organization
         return $this->apiRequest("orgs/{$customer_org_id}/subscriptions/{$subscription_id}", $update_data, 'PATCH');
     }
-    
+
     /**
      * Delete a subscription
      *
@@ -884,7 +884,7 @@ class EnhanceApi
         // Subscriptions are managed under customer organization
         return $this->apiRequest("orgs/{$customer_org_id}/subscriptions/{$subscription_id}", $data, 'DELETE');
     }
-    
+
     /**
      * Generate a secure password
      *
@@ -895,11 +895,11 @@ class EnhanceApi
         $chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
         $password = '';
         $length = 12; // Good balance of security and usability
-        
+
         for ($i = 0; $i < $length; $i++) {
             $password .= $chars[random_int(0, strlen($chars) - 1)];
         }
-        
+
         return $password;
     }
 
