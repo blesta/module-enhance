@@ -423,6 +423,9 @@ class Enhance extends Module
             return;
         }
 
+        $website_id = null;
+        $subscription_id = null;
+        $customer_org_id = null;
         // Only provision the service if 'use_module' is true
         if ($vars['use_module'] == 'true') {
             $masked_params = $params;
@@ -533,9 +536,6 @@ class Enhance extends Module
             }
 
             $success = false;
-            $website_id = null;
-            $subscription_id = null;
-            $customer_org_id = null;
             $actual_username = $params['username']; // Default fallback
             $actual_password = $params['password'];
 
