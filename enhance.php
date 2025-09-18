@@ -1269,16 +1269,15 @@ class Enhance extends Module
                         $row->meta->api_token
                     );
 
-                    $existing_login_id_obj = $this->ModuleClientMeta->get(
-                        $service->client_id,
-                        'enhance_login_id',
-                        $row->id
-                    );
+                    if ($service_fields->customer_org_id && $service_fields->website_id) {
+                        $this->log(
+                            $row->meta->hostname . '|resetPassword',
+                            json_encode(['customer_org_id' => $service_fields->customer_org_id, 'website_id' => $service_fields->website_id]),
+                            'input',
+                            true
+                        );
 
-                    if (isset($existing_login_id_obj->value)) {
-                        $this->log($row->meta->hostname . '|resetPassword', serialize($existing_login_id_obj->value), 'input', true);
-
-                        $response = $api->updateLoginPassword($existing_login_id_obj->value, $post['password']);
+                        $response = $api->setSSHPassword($service_fields->customer_org_id, $service_fields->website_id, $post['password']);
 
                         $success = false;
 
@@ -1358,16 +1357,15 @@ class Enhance extends Module
                         $row->meta->api_token
                     );
 
-                    $existing_login_id_obj = $this->ModuleClientMeta->get(
-                        $service->client_id,
-                        'enhance_login_id',
-                        $row->id
-                    );
+                    if ($service_fields->customer_org_id && $service_fields->website_id) {
+                        $this->log(
+                            $row->meta->hostname . '|resetPassword',
+                            json_encode(['customer_org_id' => $service_fields->customer_org_id, 'website_id' => $service_fields->website_id]),
+                            'input',
+                            true
+                        );
 
-                    if (isset($existing_login_id_obj->value)) {
-                        $this->log($row->meta->hostname . '|resetPassword', serialize($existing_login_id_obj->value), 'input', true);
-
-                        $response = $api->updateLoginPassword($existing_login_id_obj->value, $post['password']);
+                        $response = $api->setSSHPassword($service_fields->customer_org_id, $service_fields->website_id, $post['password']);
 
                         $success = false;
 
