@@ -397,7 +397,20 @@ class EnhanceApi
 
         return $lastResponse;
     }
-    
+
+    /**
+     * Reset login password
+     *
+     * @param string $login_id The login ID
+     * @param string $new_password The new password
+     * @return EnhanceResponse
+     */
+    public function updateLoginPassword($login_id, $new_password)
+    {
+        $data = ['newPassword' => $new_password];
+        return $this->apiRequest("v2/logins/{$login_id}/password", $data, 'PUT');
+    }
+
     /**
      * Set SSH password for website
      *
@@ -898,6 +911,16 @@ class EnhanceApi
     public function getLastRequest()
     {
         return $this->lastRequest;
+    }
+
+    /**
+     * Get available plans from the organization
+     *
+     * @return EnhanceResponse
+     */
+    public function getPlans()
+    {
+        return $this->apiRequest("orgs/{$this->org_id}/plans", [], 'GET');
     }
 
     /**
