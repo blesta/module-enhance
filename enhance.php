@@ -351,69 +351,15 @@ class Enhance extends Module
 
         $fields = new ModuleFields();
 
-        // Fetch available plans from the API
-        $plans = [];
-        $row = $this->getModuleRow($vars->module_row ?? null);
-
-        if ($row) {
-            try {
-                $api = $this->getApi($row->meta->server_label, $row->meta->hostname, $row->meta->org_id, $row->meta->api_token);
-                $response = $api->getPlans();
-
-                if (!$response->errors()) {
-                    $plansData = $response->response();
-
-                    // Handle different response structures
-                    if (isset($plansData->items) && is_array($plansData->items)) {
-                        foreach ($plansData->items as $plan) {
-                            $plans[$plan->id] = $plan->name ?? 'Plan ' . $plan->id;
-                        }
-                    } elseif (isset($plansData->data) && is_array($plansData->data)) {
-                        foreach ($plansData->data as $plan) {
-                            $plans[$plan->id] = $plan->name ?? 'Plan ' . $plan->id;
-                        }
-                    } elseif (is_array($plansData)) {
-                        foreach ($plansData as $plan) {
-                            if (is_object($plan) && isset($plan->id)) {
-                                $plans[$plan->id] = $plan->name ?? 'Plan ' . $plan->id;
-                            }
-                        }
-                    }
-                }
-            } catch (Exception $e) {
-                // Log the error but continue with empty plans array
-                $this->log($row->meta->hostname . '|getPackageFields', 'Failed to fetch plans: ' . $e->getMessage(), 'output', false);
-            }
-        }
-
         // Set the Package field
         $package = $fields->label(Language::_('Enhance.package_fields.package', true), 'enhance_package');
-
-        if (!empty($plans)) {
-            // Create a select field with available plans
-            $package->attach(
-                $fields->fieldSelect(
-                    'meta[package]',
-                    $plans,
-                    (isset($vars->meta['package']) ? $vars->meta['package'] : null),
-                    ['id' => 'enhance_package']
-                )
-            );
-        } else {
-            // Fallback to text field if no plans are available
-            $package->attach(
-                $fields->fieldText(
-                    'meta[package]',
-                    (isset($vars->meta['package']) ? $vars->meta['package'] : null),
-                    ['id' => 'enhance_package']
-                )
-            );
-
-            // Add a tooltip to inform the user
-            $tooltip = $fields->tooltip(Language::_('Enhance.package_fields.package_tooltip', true));
-            $package->attach($tooltip);
-        }
-
+        $package->attach(
+            $fields->fieldText(
+                'meta[package]',
+                (isset($vars->meta['package']) ? $vars->meta['package'] : null),
+                ['id' => 'enhance_package']
+            )
+        );
         $fields->setField($package);
 
         return $fields;
