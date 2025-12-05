@@ -901,6 +901,16 @@ class EnhanceApi
     }
 
     /**
+     * Get available plans from the organization
+     *
+     * @return EnhanceResponse
+     */
+    public function getPlans()
+    {
+        return $this->apiRequest("orgs/{$this->org_id}/plans", [], 'GET');
+    }
+
+    /**
      * Test the API connection
      *
      * @return EnhanceResponse

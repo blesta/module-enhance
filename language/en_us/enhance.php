@@ -104,3 +104,4 @@ $lang['Enhance.service_fields.password'] = 'Password';
 
 // Package Fields
 $lang['Enhance.package_fields.package'] = 'Package';
+$lang['Enhance.package_fields.package_tooltip'] = 'Enter the Plan ID from your Enhance control panel. Plans could not be loaded automatically.';
