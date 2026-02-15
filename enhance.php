@@ -270,7 +270,8 @@ class Enhance extends Module
     public function validateHostName($host_name)
     {
         $validator = new Server();
-        return $validator->isDomain($host_name) || $validator->isIp($host_name);
+        $host = (strpos($host_name, ':') !== false) ? substr($host_name, 0, strrpos($host_name, ':')) : $host_name;
+        return $validator->isDomain($host) || $validator->isIp($host);
     }
 
     /**
