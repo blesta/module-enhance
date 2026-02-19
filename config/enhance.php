@@ -21,7 +21,7 @@ Password: {service.password}
 Please note: If you have purchased more than 1 hosting service from us, login to the panel using the original password.
 
 You can manage your website through the Enhance control panel:
-Panel URL: https://{module.hostname}:2087
+Panel URL: https://{module.hostname}
 
 SSH Access (for advanced users):
 Host: {module.hostname}
@@ -40,7 +40,7 @@ Login Email: <strong>{service.customer_email}</strong><br />
 Password: <strong>{service.password}</strong></p>
 <p><strong>Please note: If you have purchased more than 1 hosting service from us, login to the panel using the original password.</strong></p>
 <p><strong>You can manage your website through the Enhance control panel:</strong><br />
-Panel URL: <a href="https://{module.hostname}:2087" target="_blank">https://{module.hostname}:2087</a></p>
+Panel URL: <a href="https://{module.hostname}" target="_blank">https://{module.hostname}</a></p>
 <p><strong>SSH Access (for advanced users):</strong><br />
 Host: <strong>{module.hostname}</strong><br />
 Username: <strong>{service.username}</strong><br />
@@ -49,4 +49,3 @@ Password: <strong>{service.password}</strong></p>
 <p>Thank you for your business!</p>'
     ]
 ]);
-

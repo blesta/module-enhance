@@ -51,9 +51,8 @@ class EnhanceApi
         $this->org_id = $org_id;
         $this->api_token = $api_token;
 
-        // Construct API URL with port 2087 if not already specified
-        $port = (strpos($hostname, ':') !== false) ? '' : ':2087';
-        $this->apiUrl = 'https://' . $hostname . $port . '/api';
+        // Construct API URL 
+        $this->apiUrl = 'https://' . $hostname . '/api';
     }
 
     /**
