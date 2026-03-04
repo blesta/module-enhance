@@ -9,6 +9,7 @@ $lang['Enhance.module_row'] = 'Server';
 $lang['Enhance.module_row_plural'] = 'Servers';
 $lang['Enhance.module_group'] = 'Server Group';
 
+$lang['Enhance.back_to_manage'] = 'Back';
 
 // Module management
 $lang['Enhance.add_module_row'] = 'Add Server';
