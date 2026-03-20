@@ -288,18 +288,18 @@ class Enhance extends Module
                 $api = $this->getApi('test', $hostname, $org_id, $api_token);
 
                 // Log the API connection attempt
-                $this->log($hostname . '|validateConnection', serialize(['hostname' => $hostname, 'org_id' => $org_id]), 'input', true);
+                $this->log($hostname . '|validateConnection', safe_serialize(['hostname' => $hostname, 'org_id' => $org_id]), 'input', true);
 
                 $response = $api->testConnection();
                 $success = !($response->errors());
 
                 // Log the response
-                $this->log($hostname . '|validateConnection', serialize($response->raw()), 'output', $success);
+                $this->log($hostname . '|validateConnection', safe_serialize($response->raw()), 'output', $success);
 
                 return $success;
             } catch (Exception $e) {
                 // Log the exception
-                $this->log($hostname . '|validateConnection', serialize(['error' => $e->getMessage()]), 'output', false);
+                $this->log($hostname . '|validateConnection', safe_serialize(['error' => $e->getMessage()]), 'output', false);
                 return false;
             }
         }
@@ -485,7 +485,7 @@ class Enhance extends Module
             $masked_params = $params;
             $masked_params['password'] = '***';
 
-            $this->log($row->meta->hostname . '|addService', serialize($masked_params), 'input', true);
+            $this->log($row->meta->hostname . '|addService', safe_serialize($masked_params), 'input', true);
 
             // Get client information for customer creation
             if (!isset($this->Clients)) {
@@ -520,7 +520,7 @@ class Enhance extends Module
             $existing_login_id = $existing_login_id_obj ? $existing_login_id_obj->value : null;
 
             // Debug logging
-            //$this->log($row->meta->hostname . '|client_debug', 'Client data: ' . serialize($client), 'output', true);
+            //$this->log($row->meta->hostname . '|client_debug', 'Client data: ' . safe_serialize($client), 'output', true);
             $this->log($row->meta->hostname . '|customer_info', 'Name: ' . $customer_name . ', Email: ' . $customer_email, 'output', true);
 
             if ($existing_org_id && $existing_login_id) {
@@ -553,7 +553,7 @@ class Enhance extends Module
             }
 
             // Debug logging to see what's happening
-            //$this->log($row->meta->hostname . '|addService_debug', 'Create website result: ' . serialize($response), 'output', true);
+            //$this->log($row->meta->hostname . '|addService_debug', 'Create website result: ' . safe_serialize($response), 'output', true);
 
             // Log whether we used existing or new customer
             if (isset($response['existing_customer'])) {
@@ -563,7 +563,7 @@ class Enhance extends Module
 
             // Log which endpoint and data was used for the successful request
             $lastRequest = $api->getLastRequest();
-            //$this->log($row->meta->hostname . '|api_request_debug', 'Last request info: ' . serialize($lastRequest), 'output', true);
+            //$this->log($row->meta->hostname . '|api_request_debug', 'Last request info: ' . safe_serialize($lastRequest), 'output', true);
 
             // Log detailed customer search results
             $detailKeys = ['total_customers', 'getCustomers_error', 'no_customers_data', 'search_complete', 'match_found'];
@@ -1213,7 +1213,7 @@ class Enhance extends Module
                         $otp_response = null;
                     }
                 } else {
-                    $this->log($row->meta->hostname . '|sso_error', 'Failed to get members: ' . serialize($membersResponse->errors()), 'output', false);
+                    $this->log($row->meta->hostname . '|sso_error', 'Failed to get members: ' . safe_serialize($membersResponse->errors()), 'output', false);
                     $otp_response = null;
                 }
             } catch (Exception $e) {
@@ -1236,7 +1236,7 @@ class Enhance extends Module
                     $this->log($row->meta->hostname . '|sso_error', 'SSO response received but no URL found: ' . json_encode($otp_result), 'output', false);
                 }
             } elseif ($otp_response) {
-                $this->log($row->meta->hostname . '|sso_error', 'SSO failed: ' . serialize($otp_response->errors()) . ' Status: ' . $otp_response->status(), 'output', false);
+                $this->log($row->meta->hostname . '|sso_error', 'SSO failed: ' . safe_serialize($otp_response->errors()) . ' Status: ' . $otp_response->status(), 'output', false);
             }
 
         } else {
@@ -1330,7 +1330,7 @@ class Enhance extends Module
                     );
 
                     if (isset($existing_login_id_obj->value)) {
-                        $this->log($row->meta->hostname . '|resetPassword', serialize($existing_login_id_obj->value), 'input', true);
+                        $this->log($row->meta->hostname . '|resetPassword', safe_serialize($existing_login_id_obj->value), 'input', true);
 
                         $response = $api->updateLoginPassword($existing_login_id_obj->value, $post['password']);
 
@@ -1347,7 +1347,7 @@ class Enhance extends Module
                             $this->setMessage('success', Language::_('Enhance.success.password.changed', true));
                         }
 
-                        $this->log($row->meta->hostname . '|resetPassword', serialize($response->raw()), 'output', $success);
+                        $this->log($row->meta->hostname . '|resetPassword', safe_serialize($response->raw()), 'output', $success);
                     }
                 }
             }
@@ -1419,7 +1419,7 @@ class Enhance extends Module
                     );
 
                     if (isset($existing_login_id_obj->value)) {
-                        $this->log($row->meta->hostname . '|resetPassword', serialize($existing_login_id_obj->value), 'input', true);
+                        $this->log($row->meta->hostname . '|resetPassword', safe_serialize($existing_login_id_obj->value), 'input', true);
 
                         $response = $api->updateLoginPassword($existing_login_id_obj->value, $post['password']);
 
@@ -1436,7 +1436,7 @@ class Enhance extends Module
                             $this->setMessage('success', Language::_('Enhance.success.password.changed', true));
                         }
 
-                        $this->log($row->meta->hostname . '|resetPassword', serialize($response->raw()), 'output', $success);
+                        $this->log($row->meta->hostname . '|resetPassword', safe_serialize($response->raw()), 'output', $success);
                     }
                 }
             }

@@ -487,7 +487,7 @@ class EnhanceApi
         $response = $this->getLogins();
 
         if ($response->errors()) {
-            if ($logCallback) $logCallback("ERROR: Failed to get logins - " . serialize($response->errors()));
+            if ($logCallback) $logCallback("ERROR: Failed to get logins - " . safe_serialize($response->errors()));
             return null;
         }
 
@@ -517,7 +517,7 @@ class EnhanceApi
                 $customerInfo = $this->findCustomerForLogin($loginId, $logCallback);
 
                 if ($customerInfo) {
-                    if ($logCallback) $logCallback("Found customer record: " . serialize($customerInfo));
+                    if ($logCallback) $logCallback("Found customer record: " . safe_serialize($customerInfo));
 
                     return [
                         'customer_id' => $customerInfo['id'],
@@ -562,7 +562,7 @@ class EnhanceApi
         $response = $this->getCustomers();
 
         if ($response->errors()) {
-            if ($logCallback) $logCallback("ERROR: Failed to get customers - " . serialize($response->errors()));
+            if ($logCallback) $logCallback("ERROR: Failed to get customers - " . safe_serialize($response->errors()));
             return null;
         }
 
@@ -613,7 +613,7 @@ class EnhanceApi
         $response = $this->getCustomers();
 
         if ($response->errors()) {
-            if ($logCallback) $logCallback("ERROR: Failed to get customers - " . serialize($response->errors()));
+            if ($logCallback) $logCallback("ERROR: Failed to get customers - " . safe_serialize($response->errors()));
             return null;
         }
 
@@ -644,7 +644,7 @@ class EnhanceApi
             $membersResponse = $this->apiRequest("orgs/{$customer_org_id}/members", [], 'GET');
 
             if ($membersResponse->errors()) {
-                if ($logCallback) $logCallback("ERROR getting members for customer $index: " . serialize($membersResponse->errors()));
+                if ($logCallback) $logCallback("ERROR getting members for customer $index: " . safe_serialize($membersResponse->errors()));
                 continue;
             }
 
