@@ -28,6 +28,8 @@ $lang['Enhance.manage.module_rows.confirm_delete'] = 'Are you sure you want to d
 $lang['Enhance.manage.module_rows_no_results'] = 'There are no Servers.';
 
 $lang['Enhance.manage.module_groups_title'] = 'Groups';
+$lang['Enhance.manage.tab_rows'] = 'Servers';
+$lang['Enhance.manage.tab_groups'] = 'Server Groups';
 $lang['Enhance.manage.module_groups_heading.name'] = 'Name';
 $lang['Enhance.manage.module_groups_heading.module_rows'] = 'Servers';
 $lang['Enhance.manage.module_groups_heading.options'] = 'Options';
