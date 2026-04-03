@@ -497,6 +497,7 @@ class Enhance extends Module
         $website_id = null;
         $subscription_id = null;
         $customer_org_id = null;
+        $customer_email = null;
         // Only provision the service if 'use_module' is true
         if ($vars['use_module'] == 'true') {
             $masked_params = $params;

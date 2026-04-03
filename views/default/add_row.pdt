@@ -17,7 +17,7 @@ $this->Widget->create($this->_('Enhance.add_row.box_title', true));
         <label for="server_label" class="form-label">
             <?php $this->_('Enhance.row_meta.server_label'); ?>
         </label>
-        <?php $this->Form->fieldText('server_label', isset($vars->server_label) ? $vars->server_label : null, [
+        <?php $this->Form->fieldText('server_label', $vars->server_label ?? null, [
             'id' => 'server_label',
             'class' => 'form-control',
         ]); ?>
@@ -27,7 +27,7 @@ $this->Widget->create($this->_('Enhance.add_row.box_title', true));
         <label for="hostname" class="form-label">
             <?php $this->_('Enhance.row_meta.hostname'); ?>
         </label>
-        <?php $this->Form->fieldText('hostname', isset($vars->hostname) ? $vars->hostname : null, [
+        <?php $this->Form->fieldText('hostname', $vars->hostname ?? null, [
             'id' => 'hostname',
             'class' => 'form-control',
         ]); ?>
@@ -37,7 +37,7 @@ $this->Widget->create($this->_('Enhance.add_row.box_title', true));
         <label for="org_id" class="form-label">
             <?php $this->_('Enhance.row_meta.org_id'); ?>
         </label>
-        <?php $this->Form->fieldText('org_id', isset($vars->org_id) ? $vars->org_id : null, [
+        <?php $this->Form->fieldText('org_id', $vars->org_id ?? null, [
             'id' => 'org_id',
             'class' => 'form-control',
         ]); ?>
@@ -47,7 +47,7 @@ $this->Widget->create($this->_('Enhance.add_row.box_title', true));
         <label for="api_token" class="form-label">
             <?php $this->_('Enhance.row_meta.api_token'); ?>
         </label>
-        <?php $this->Form->fieldText('api_token', isset($vars->api_token) ? $vars->api_token : null, [
+        <?php $this->Form->fieldText('api_token', $vars->api_token ?? null, [
             'id' => 'api_token',
             'class' => 'form-control',
         ]); ?>
@@ -62,4 +62,4 @@ $this->Widget->create($this->_('Enhance.add_row.box_title', true));
 
         <?php $this->Form->end(); ?>
         <?php $this->Widget->end();
-?>
+        ?>
