@@ -42,9 +42,27 @@ class Enhance extends Module
      */
     public function upgrade($current_version)
     {
-////        if (version_compare($current_version, '1.1.0', '<')) {
-////            // Preform actions here such as re-adding cron tasks, setting new meta fields, and more
-////        }
+        if (version_compare($current_version, '2.1.0', '<')) {
+            if (!isset($this->ModuleManager)) {
+                Loader::loadModels($this, ['ModuleManager']);
+            }
+            if (!isset($this->Record)) {
+                Loader::loadComponents($this, ['Record']);
+            }
+
+            // Client meta was stored under the module row ID instead of the
+            // module ID. Re-key the affected records to the correct module ID.
+            $modules = $this->ModuleManager->getByClass('enhance');
+            foreach ($modules as $module) {
+                $rows = $this->ModuleManager->getRows($module->id);
+                foreach ($rows as $row) {
+                    $this->Record->where('module_id', '=', $row->id)
+                        ->where('module_row_id', '=', 0)
+                        ->where('key', 'in', ['enhance_org_id', 'enhance_login_id'])
+                        ->update('module_client_meta', ['module_id' => $module->id]);
+                }
+            }
+        }
     }
 
     /**
@@ -525,12 +543,12 @@ class Enhance extends Module
             $existing_org_id_obj = $this->ModuleClientMeta->get(
                 $vars['client_id'],
                 'enhance_org_id',
-                $row->id
+                $row->module_id
             );
             $existing_login_id_obj = $this->ModuleClientMeta->get(
                 $vars['client_id'],
                 'enhance_login_id',
-                $row->id
+                $row->module_id
             );
 
             // Extract values from objects (ModuleClientMeta returns objects with ->value property)
@@ -640,7 +658,7 @@ class Enhance extends Module
                 if (!$existing_org_id && $customer_org_id && isset($response['login_id'])) {
                     $this->ModuleClientMeta->set(
                         $vars['client_id'],
-                        $row->id,
+                        $row->module_id,
                         0,
                         [
                             ['key' => 'enhance_org_id', 'value' => $customer_org_id, 'encrypted' => 0],
@@ -770,6 +788,78 @@ class Enhance extends Module
         }
 
         return $return;
+    }
+
+    /**
+     * Updates the package for the service on the remote server. Sets Input errors on failure,
+     * preventing the service's package from being changed.
+     *
+     * @param stdClass $package_from A stdClass object representing the current package
+     * @param stdClass $package_to A stdClass object representing the new package
+     * @param stdClass $service A stdClass object representing the current service
+     * @param stdClass $parent_package A stdClass object representing the parent
+     *  service's selected package (if the current service is an addon service)
+     * @param stdClass $parent_service A stdClass object representing the parent
+     *  service of the service being changed (if the current service is an addon service)
+     * @return mixed null to maintain the existing meta fields
+     * @see Module::getModule()
+     * @see Module::getModuleRow()
+     */
+    public function changeServicePackage(
+        $package_from,
+        $package_to,
+        $service,
+        $parent_package = null,
+        $parent_service = null
+    ) {
+        if (($row = $this->getModuleRow())) {
+            // Only update the subscription if the plan has changed
+            if ($package_from->meta->package != $package_to->meta->package) {
+                $api = $this->getApi(
+                    $row->meta->server_label,
+                    $row->meta->hostname,
+                    $row->meta->org_id,
+                    $row->meta->api_token
+                );
+
+                $service_fields = $this->serviceFieldsToObject($service->fields);
+
+                // Resolve customer_org_id from service fields, falling back to ModuleClientMeta
+                $customer_org_id = isset($service_fields->customer_org_id) ? $service_fields->customer_org_id : null;
+                if (!$customer_org_id) {
+                    if (!isset($this->ModuleClientMeta)) {
+                        Loader::loadModels($this, ['ModuleClientMeta']);
+                    }
+                    $meta = $this->ModuleClientMeta->get($service->client_id, 'enhance_org_id', $row->module_id);
+                    $customer_org_id = $meta ? $meta->value : null;
+                }
+
+                if (isset($customer_org_id) && isset($service_fields->subscription_id)) {
+                    $this->log($row->meta->hostname . '|changeServicePackage', 'Changing subscription: ' . $service_fields->subscription_id . ' to plan: ' . $package_to->meta->package, 'input', true);
+
+                    $response = $api->updateCustomerSubscription(
+                        $customer_org_id,
+                        $service_fields->subscription_id,
+                        ['planId' => intval($package_to->meta->package)]
+                    );
+
+                    $success = false;
+
+                    if (($errors = $response->errors())) {
+                        $this->Input->setErrors(['api' => $errors]);
+                    } else {
+                        $success = true;
+                    }
+
+                    $this->log($row->meta->hostname . '|changeServicePackage', 'Change package result: ' . ($success ? 'success' : 'failed'), 'output', $success);
+                } else {
+                    $this->log($row->meta->hostname . '|changeServicePackage', 'Missing customer_org_id or subscription_id', 'output', false);
+                    $this->Input->setErrors(['api' => ['Missing required service fields for package change']]);
+                }
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -1347,7 +1437,7 @@ class Enhance extends Module
                     $existing_login_id_obj = $this->ModuleClientMeta->get(
                         $service->client_id,
                         'enhance_login_id',
-                        $row->id
+                        $row->module_id
                     );
 
                     if (isset($existing_login_id_obj->value)) {
@@ -1436,7 +1526,7 @@ class Enhance extends Module
                     $existing_login_id_obj = $this->ModuleClientMeta->get(
                         $service->client_id,
                         'enhance_login_id',
-                        $row->id
+                        $row->module_id
                     );
 
                     if (isset($existing_login_id_obj->value)) {
