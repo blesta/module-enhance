@@ -42,9 +42,27 @@ class Enhance extends Module
      */
     public function upgrade($current_version)
     {
-////        if (version_compare($current_version, '1.1.0', '<')) {
-////            // Preform actions here such as re-adding cron tasks, setting new meta fields, and more
-////        }
+        if (version_compare($current_version, '2.1.0', '<')) {
+            if (!isset($this->ModuleManager)) {
+                Loader::loadModels($this, ['ModuleManager']);
+            }
+            if (!isset($this->Record)) {
+                Loader::loadComponents($this, ['Record']);
+            }
+
+            // Client meta was stored under the module row ID instead of the
+            // module ID. Re-key the affected records to the correct module ID.
+            $modules = $this->ModuleManager->getByClass('enhance');
+            foreach ($modules as $module) {
+                $rows = $this->ModuleManager->getRows($module->id);
+                foreach ($rows as $row) {
+                    $this->Record->where('module_id', '=', $row->id)
+                        ->where('module_row_id', '=', 0)
+                        ->where('key', 'in', ['enhance_org_id', 'enhance_login_id'])
+                        ->update('module_client_meta', ['module_id' => $module->id]);
+                }
+            }
+        }
     }
 
     /**
