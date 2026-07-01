@@ -178,7 +178,7 @@ class Enhance extends Module
      */
     public function addModuleRow(array &$vars)
     {
-        $meta_fields = ['server_label', 'hostname', 'org_id', 'api_token'];
+        $meta_fields = ['server_label', 'hostname', 'org_id', 'api_token', 'name_servers'];
         $encrypted_fields = [];
 
         // Set unset checkboxes
@@ -224,7 +224,7 @@ class Enhance extends Module
      */
     public function editModuleRow($module_row, array &$vars)
     {
-        $meta_fields = ['server_label','hostname','org_id','api_token'];
+        $meta_fields = ['server_label','hostname','org_id','api_token','name_servers'];
         $encrypted_fields = [];
 
         $this->Input->setRules($this->getRowRules($vars));
@@ -290,6 +290,16 @@ class Enhance extends Module
                     ],
                     'message' => Language::_('Enhance.!error.api_token.valid', true)
                 ]
+            ],
+            'name_servers' => [
+                'count' => [
+                    'rule' => [[$this, 'validateNameServerCount']],
+                    'message' => Language::_('Enhance.!error.name_servers.count', true)
+                ],
+                'format' => [
+                    'rule' => [[$this, 'validateNameServers']],
+                    'message' => Language::_('Enhance.!error.name_servers.format', true)
+                ]
             ]
         ];
 
@@ -306,6 +316,36 @@ class Enhance extends Module
     {
         $validator = new Server();
         return $validator->isDomain($host_name) || $validator->isIp($host_name);
+    }
+
+    /**
+     * Validates that at least 2 name servers are set in the given array of name servers.
+     *
+     * @param array $name_servers An array of name servers
+     * @return bool True if the array count is >= 2, false otherwise
+     */
+    public function validateNameServerCount($name_servers)
+    {
+        return is_array($name_servers) && count($name_servers) >= 2;
+    }
+
+    /**
+     * Validates that the given name servers are formatted correctly.
+     *
+     * @param array $name_servers An array of name servers
+     * @return bool True if every name server is formatted correctly, false otherwise
+     */
+    public function validateNameServers($name_servers)
+    {
+        if (is_array($name_servers)) {
+            foreach ($name_servers as $name_server) {
+                if (!$this->validateHostName($name_server)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 
     /**

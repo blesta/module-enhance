@@ -53,6 +53,41 @@ $this->Widget->create($this->_('Enhance.edit_row.box_title', true));
         ]); ?>
     </div>
 
+    <h6 class="form-section-header mt-4"><?php $this->_('Enhance.edit_row.name_servers_title'); ?></h6>
+
+    <div class="mb-3">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th><?php $this->_('Enhance.edit_row.name_server_col'); ?></th>
+                    <th><?php $this->_('Enhance.edit_row.name_server_host_col'); ?></th>
+                    <th style="width: 50px;"></th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php
+                $num_servers = count($vars->name_servers ?? []);
+                for ($i = 0; $i < max(2, $num_servers); $i++) {
+                ?>
+                    <tr class="ns_row">
+                        <td><?php $this->_('Enhance.edit_row.name_server', false, '<span>' . ($i + 1) . '</span>'); ?></td>
+                        <td><?php $this->Form->fieldText('name_servers[]', $vars->name_servers[$i] ?? null, ['class' => 'form-control']); ?></td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-sm btn-outline-danger ns_row_remove" title="<?php $this->_('Enhance.edit_row.remove_name_server'); ?>">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                <?php
+                }
+                ?>
+            </tbody>
+        </table>
+    </div>
+    <a class="btn btn-outline-success btn-sm ns_row_add" href="#"><i class="bi bi-plus-lg"></i> <span><?php $this->_(
+        'Enhance.edit_row.name_server_btn',
+    ); ?></span></a>
+
     <?php $this->Widget->footer(); ?>
     <div class="d-flex justify-content-end">
         <?php $this->Form->fieldSubmit('save', $this->_('Enhance.edit_row.edit_btn', true), [
@@ -63,3 +98,34 @@ $this->Widget->create($this->_('Enhance.edit_row.box_title', true));
         <?php $this->Widget->end(); ?>
         <?php $this->Form->end();
         ?>
+
+<script type="text/javascript">
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add a row
+        document.querySelector('.ns_row_add').addEventListener('click', function(e) {
+            e.preventDefault();
+            var fields = document.querySelector('tr.ns_row').cloneNode(true);
+            fields.querySelectorAll('input').forEach(function(el) {
+                el.value = '';
+            });
+            fields.querySelector('td:first-child span').textContent = document.querySelectorAll('tr.ns_row').length + 1;
+            var ns_rows = document.querySelectorAll('tr.ns_row');
+            ns_rows[ns_rows.length - 1].insertAdjacentElement('afterend', fields);
+        });
+        // Remove a row - event delegation for dynamic rows
+        document.querySelector('tbody').addEventListener('click', function(e) {
+            var removeLink = e.target.closest('.ns_row_remove');
+            if (removeLink) {
+                e.preventDefault();
+                if (document.querySelectorAll('tr.ns_row').length > 1) {
+                    removeLink.closest('tr').remove();
+                    // Reorder the counts for these rows
+                    var i = 1;
+                    document.querySelectorAll('tr.ns_row').forEach(function(row) {
+                        row.querySelector('td:first-child span').textContent = i++;
+                    });
+                }
+            }
+        });
+    });
+</script>
