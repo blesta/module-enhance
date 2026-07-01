@@ -47,11 +47,23 @@ $lang['Enhance.order_options.first'] = 'First Non-full Server';
 // Add row
 $lang['Enhance.add_row.box_title'] = 'Enhance - Add Server';
 $lang['Enhance.add_row.add_btn'] = 'Add Server';
+$lang['Enhance.add_row.name_servers_title'] = 'Name Servers';
+$lang['Enhance.add_row.name_server_btn'] = 'Add Additional Name Server';
+$lang['Enhance.add_row.name_server_col'] = 'Name Server';
+$lang['Enhance.add_row.name_server_host_col'] = 'Hostname';
+$lang['Enhance.add_row.name_server'] = 'Name server %1$s'; // %1$s is the name server number (e.g. 3)
+$lang['Enhance.add_row.remove_name_server'] = 'Remove';
 
 
 // Edit row
 $lang['Enhance.edit_row.box_title'] = 'Enhance - Edit Server';
 $lang['Enhance.edit_row.edit_btn'] = 'Update Server';
+$lang['Enhance.edit_row.name_servers_title'] = 'Name Servers';
+$lang['Enhance.edit_row.name_server_btn'] = 'Add Additional Name Server';
+$lang['Enhance.edit_row.name_server_col'] = 'Name Server';
+$lang['Enhance.edit_row.name_server_host_col'] = 'Hostname';
+$lang['Enhance.edit_row.name_server'] = 'Name server %1$s'; // %1$s is the name server number (e.g. 3)
+$lang['Enhance.edit_row.remove_name_server'] = 'Remove';
 
 
 // Row meta
@@ -67,6 +79,8 @@ $lang['Enhance.!error.hostname.format'] = 'Please enter a valid hostname or IP a
 $lang['Enhance.!error.org_id.empty'] = 'Please enter an organization ID.';
 $lang['Enhance.!error.api_token.empty'] = 'Please enter an API token.';
 $lang['Enhance.!error.api_token.valid'] = 'Unable to connect to the Enhance server. Please verify your API credentials.';
+$lang['Enhance.!error.name_servers.count'] = 'You must define at least 2 name servers.';
+$lang['Enhance.!error.name_servers.format'] = 'One or more of the name servers entered are invalid.';
 $lang['Enhance.!error.module_row.missing'] = 'An internal error occurred. The module row is unavailable.';
 $lang['Enhance.!error.domain.format'] = 'Please enter a valid domain name.';
 $lang['Enhance.!error.username.format'] = 'The username may contain only letters, numbers, dashes, and underscores and must be between 3 and 16 characters in length.';
